@@ -1,2 +1,1 @@
-# udacityMLCapstone
-Udacity Machine Learning Capstone Project
+# Udacity Machine Learning Capstone Project
