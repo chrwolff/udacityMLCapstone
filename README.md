@@ -16,9 +16,9 @@ This project follows the classical data science steps:
 ## Data License
 The author is not associated with the operator of Hubway, [Motivate International, Inc.](https://www.motivateco.com/)
 
-All data related to Hubway has to be published according to their data [Hubway Data License Agreement](https://www.thehubway.com/data-license-agreement).
+All data related to Hubway has to be published according to their [Hubway Data License Agreement](https://www.thehubway.com/data-license-agreement).
 
 Historical Weather data was aquired from [Darksky](https://darksky.net/poweredby/).
 
 ## Software License
-All software of this project is published under the MIT license.
+All software of this project is published under MIT license.
