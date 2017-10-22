@@ -1,4 +1,10 @@
-MIT License
+Data License
+The author is not associated with the operator of Hubway, Motivate International, Inc. (https://www.motivateco.com/).
+All data related to Hubway has to be published according to their Data License Agreement (https://www.thehubway.com/data-license-agreement).
+Historical Weather data was aquired from Darksky.net (https://darksky.net/poweredby/).
+
+Software License
+All software of this project is published under MIT License
 
 Copyright (c) 2017 Christian Wolff
 
