@@ -1,0 +1,17 @@
+Station
+Description/Name of the station
+
+Station ID
+Internal HUbway ID
+
+Latitude
+Geographical latitude of the station
+
+Longitude
+Geographical longitude of the station
+
+Municipality
+Municipality the station is located in
+
+# of Docks
+Total number of docks

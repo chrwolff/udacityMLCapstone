@@ -1,2 +1,9 @@
 input/hubway_trips_2.csv
 input/hubway_trips.csv
+img
+*.aux
+*.log
+fromTripsToFlows.pdf
+*.tex
+*.gz
+*.out
