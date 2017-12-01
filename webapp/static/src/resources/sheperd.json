@@ -1,0 +1,9 @@
+{
+    "steps": [
+        {
+            "element": "#datepicker",
+            "intro": "Ok, wasn't that fun?",
+            "position": "right"
+        }
+    ]
+}

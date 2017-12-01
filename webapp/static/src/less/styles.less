@@ -1,0 +1,231 @@
+@import "colors.less";
+
+.overlay {
+    z-index: 10;
+    background-color: lightgray;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    opacity: 0.9;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: @standout-color;
+}
+
+.clearButton {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-decoration: none;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+}
+
+.clearButtonHover {
+    color: white;
+}
+
+a.bannerButton {
+    &:extend(.clearButton);
+    color: @standout-color;
+}
+
+a.bannerButton:hover {
+    &:extend(.clearButtonHover);
+    background-color: @standout-color;
+}
+
+a.eventButton {
+    &:extend(.clearButton);
+    color: @attention-color;
+    margin: auto;
+}
+
+a.eventButton:hover {
+    &:extend(.clearButtonHover);
+    background-color: @attention-color;
+}
+
+a.eventButtonPressed {
+    &:extend(.clearButton);
+    &:extend(.clearButtonHover);
+    background-color: @attention-color;
+    margin: auto;
+}
+
+.banner {
+    height: 55px;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #fafafb;
+    border-color: @main-color;
+    border-width: 3px 0 1px 0;
+    border-style: solid;
+    padding: 0 5px 0 5px;
+}
+
+.logo {
+    height: auto;
+    width: 150px;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#mapButton {
+    display: flex;
+}
+
+.container {
+    width: 100%;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.item {
+    width: 100%;
+}
+
+#stationView {
+    display: flex;
+    flex-direction: column;
+}
+
+#map {
+    position: fixed;
+    top: 55px;
+    transform: translate(100%, 0);
+    transition: transform 0.3s ease;
+}
+
+#map.show {
+    transform: translate(0, 0);
+}
+
+.bannerLeft {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-start;
+    align-items: center;
+    width: 150px;
+}
+.bannerCenter {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.bannerRight {
+    display: flex;
+    flex-flow: row;
+    justify-content: flex-end;
+    align-items: center;
+    width: 150px;
+}
+
+#stationName {
+    color: @main-color; 
+    text-overflow: ellipsis;
+	white-space: nowrap;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#backButton {
+    display: none;
+}
+
+#backButton.show {
+    margin: 0 0 0 10px;
+    display: flex;
+}
+
+.stationViewTop {
+    padding: 10px;
+    height: 5%;
+    min-height: 40px;
+    border-color: @main-color;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+}
+
+.stationViewMenu {
+    padding: 10px;
+    height: 5%;
+    min-height: 40px;
+    border-color: @main-color;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+#datepicker {
+    text-align: center;
+}
+
+.table {
+    width: 100%;
+    padding-left: 5px;
+}
+
+#timeline {
+    overflow-y: scroll;
+    height: 85%;
+}
+
+.weatherIcon {
+    margin-right: 10px;
+    font-size: 25px;
+    width: 35px;
+}
+
+div.tooltip {	
+    position: absolute;			
+    text-align: center;			
+    width: 120px;					
+    height: 32px;					
+    padding: 2px;				
+    font: 12px sans-serif;		
+    background: lightgrey;	
+    border: 0px;		
+    border-radius: 8px;			
+    pointer-events: none;			
+}
+
+.table-row {
+    border-bottom: thin solid @tableborder-color;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: no-wrap;
+    width: 100%;
+    min-height: 50px;
+    align-items: center;
+}
+
+.table-row:last-of-type {
+    border-bottom-width: 0px;
+}
+
+.table-header {
+    &:extend(.table-row);
+    font-weight: bold;
+    margin-bottom: 5px;
+    height: 5%;
+}
+
+.table-column {
+    flex-grow: 0;
+    padding-left: 5px;
+    padding-right: 5px;
+    flex-shrink: 0;
+}
