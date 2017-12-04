@@ -7,6 +7,7 @@ module.exports = {
         publicPath: 'http://localhost:5000/resources/', // This is used to generate URLs to e.g. images
         filename: 'bundle.js' 
     },
+    devtool: 'source-map',
     module: {
       rules: [
         {

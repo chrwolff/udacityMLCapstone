@@ -9,7 +9,7 @@ var $ = require("jquery");
 export default class Controller {
     
     static init () {
-        this.EVENT_THRESHOLD = 6;
+        this.EVENT_THRESHOLD = 0;
         this.eventingStationsHour = undefined;
 
         var loadPromise = Model.init(this);

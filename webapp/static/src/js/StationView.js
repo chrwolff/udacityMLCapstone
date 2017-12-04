@@ -117,7 +117,7 @@ export default class StationView {
             var timelineItem = this.timeline[hour];
             var aggregated = aggregatedStations[hour];
 
-            this.renderBars(hour, aggregated.in, aggregated.out, aggregatedStationsMaximum.in, aggregatedStationsMaximum.out);
+            this.renderBars(hour, aggregated.arrivals, aggregated.departures, aggregatedStationsMaximum.arrivals, aggregatedStationsMaximum.departures);
         }
         
         //collect hours with critcal events
@@ -168,7 +168,7 @@ export default class StationView {
                 timelineItem.stationCritical.removeChild(timelineItem.stationCritical.firstChild);
             }
 
-            this.renderBars(hour, historyItem.in, historyItem.out, historyMaximum.in, historyMaximum.out);       
+            this.renderBars(hour, historyItem.arrivals, historyItem.departures, historyMaximum.arrivals, historyMaximum.departures);       
             
             if (Math.abs(historyItem.delta) > this.Controller.EVENT_THRESHOLD) {
                 var eventIcon = document.createElement("i");

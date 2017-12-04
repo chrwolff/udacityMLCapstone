@@ -36143,7 +36143,7 @@ var Controller = function () {
     _createClass(Controller, null, [{
         key: 'init',
         value: function init() {
-            this.EVENT_THRESHOLD = 6;
+            this.EVENT_THRESHOLD = 0;
             this.eventingStationsHour = undefined;
 
             var loadPromise = _Model2.default.init(this);
@@ -36536,7 +36536,7 @@ var Model = function () {
             for (var id in this._stations) {
                 id = parseInt(id);
                 var station = this._stations[id];
-                if (station.begin_date <= this.selectedDate.valueOf() && station.end_date >= this.selectedDate.valueOf()) {
+                if (station.first_used <= this.selectedDate.valueOf() && station.last_used >= this.selectedDate.valueOf()) {
                     current_stations[id] = station;
                 }
             }
@@ -50598,7 +50598,7 @@ var StationView = function () {
                 var timelineItem = this.timeline[hour];
                 var aggregated = aggregatedStations[hour];
 
-                this.renderBars(hour, aggregated.in, aggregated.out, aggregatedStationsMaximum.in, aggregatedStationsMaximum.out);
+                this.renderBars(hour, aggregated.arrivals, aggregated.departures, aggregatedStationsMaximum.arrivals, aggregatedStationsMaximum.departures);
             }
 
             //collect hours with critcal events
@@ -50652,7 +50652,7 @@ var StationView = function () {
                     timelineItem.stationCritical.removeChild(timelineItem.stationCritical.firstChild);
                 }
 
-                this.renderBars(hour, historyItem.in, historyItem.out, historyMaximum.in, historyMaximum.out);
+                this.renderBars(hour, historyItem.arrivals, historyItem.departures, historyMaximum.arrivals, historyMaximum.departures);
 
                 if (Math.abs(historyItem.delta) > this.Controller.EVENT_THRESHOLD) {
                     var eventIcon = document.createElement("i");
@@ -68639,3 +68639,4 @@ exports.push([module.i, "* {\n  box-sizing: border-box;\n}\nhtml {\n  font-famil
 
 /***/ })
 /******/ ]);
+//# sourceMappingURL=bundle.js.map

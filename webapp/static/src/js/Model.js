@@ -183,7 +183,7 @@ export default class Model {
         for (var id in this._stations) {
             id = parseInt(id);
             var station = this._stations[id];
-            if ((station.begin_date <= this.selectedDate.valueOf()) && (station.end_date >= this.selectedDate.valueOf())) {
+            if ((station.first_used <= this.selectedDate.valueOf()) && (station.last_used >= this.selectedDate.valueOf())) {
                 current_stations[id] = station;
             }
         }
