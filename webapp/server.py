@@ -6,30 +6,33 @@ import xgboost as xgb
 
 app = Flask(__name__)
 
-#load stations and cluster/station mapping
-stations_df = pd.read_csv('../data/modelInput/stations.csv')
+features = ['latitude_pca', 'longitude_pca',
+            'apparentTemperature', 'dewPoint', 'humidity', 'precipIntensity',
+            'precipProbability', 'pressure', 'temperature',
+            'visibility', 'windBearing', 'windSpeed', 'hour',
+            'weekday', 'is_holiday', 'is_weekend', 'is_weekend_or_holiday']
+
+#load stations
+stations_df = pd.read_csv('../data/modelInput/stations_201505_201611.csv')
 stations_df = stations_df.rename(columns={
     'station_name': 'name',
     'station_id': 'id'
 })
 stations_df['first_used'] = stations_df['first_used'].apply(pd.Timestamp)
 stations_df['last_used'] = stations_df['last_used'].apply(pd.Timestamp)
-
-cluster_number = 50
-with open('../models/stationClusterMap.json', 'r') as f:
-    cluster_station_map = json.load(f)
+station_ids = stations_df['id'].unique()
 
 #load models
 departures_model = xgb.Booster(model_file='../models/boosterDepartures.xgbm')
 arrivals_model = xgb.Booster(model_file='../models/boosterArrivals.xgbm')
 
-#load additional dfeatures
+#load additional features
 additional_features_df = pd.read_csv('../data/modelInput/additionalFeatures.csv')
 additional_features_df['date_hour'] = additional_features_df['date_hour'].apply(pd.Timestamp)
 additional_features_df = additional_features_df.set_index('date_hour')
 additional_features_df = additional_features_df.tz_localize(None)
 
-#empty dataframe to cache predictions
+#create empty dataframe to cache predictions
 predictions_cache = pd.DataFrame([], columns=['date_hour',
                                               'station_id',
                                               'arrivals',
@@ -37,86 +40,45 @@ predictions_cache = pd.DataFrame([], columns=['date_hour',
                                               'flow'])
 predictions_cache = predictions_cache.set_index('date_hour')
 
-#station_history_df = pd.read_csv('../data/modelInput/flowPerHourAndStation.csv')
-#station_history_df['date_hour'] = station_history_df['date_hour'].apply(pd.Timestamp)
-#station_history_df = station_history_df.set_index('date_hour')
+#load the actual flow data for comparison 
+station_history_df = pd.read_csv('../data/modelInput/flowPerHourAndStation.csv')
+station_history_df['date_hour'] = station_history_df['date_hour'].apply(pd.Timestamp)
+station_history_df = station_history_df.set_index('date_hour')
 
-#stations_df = pd.read_csv('../data/modelInput/stations.csv')
-#stations_df = stations_df.rename(columns={
-#    'station_name': 'name',
-#    'station_id': 'id',
-#    'first_used': 'begin_date',
-#    'last_used': 'end_date'
-#})
-#stations_df = stations_df.set_index('id')
-#stations_df['begin_date'] = stations_df['begin_date'].apply(pd.Timestamp)
-#stations_df['end_date'] = stations_df['end_date'].apply(pd.Timestamp)
-
-#def cumulate_delta(stationId, timestamp_start, timestamp_end):
-#    is_null_df = [([station_history_df['station_id'] == stationId]) & (station_history_df['cumulated_delta'].isnull())]
-#    station_history_df[timestamp_start:timestamp_end][is_null_df] 
-
-def get_predictions(timestamp):
-    timestamp_start = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 0)
-    timestamp_end = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 23)
-
-    print(timestamp_start)
-
+def get_predictions(timestamp_start, timestamp_end):
     global predictions_cache
+    
+    #if possible, use predictions from cache 
     trips = predictions_cache[timestamp_start:timestamp_end]
     if (trips.shape[0] > 0):
         return trips
 
-    clusters = np.arange(0, cluster_number)
+    #create index from the Cartesian product of station ids and timestamps for the 24 hours of the requested day
     date_hours = pd.date_range(timestamp_start, timestamp_end, freq='H')
-    cluster_time_index = pd.MultiIndex.from_product([date_hours, clusters], names=['date_hour', 'cluster_id'])
-    cluster_time_df = pd.DataFrame({'arrivals': 0, 'departures': 0}, index=cluster_time_index)
-    cluster_time_df = cluster_time_df.reset_index()
-    cluster_time_df = cluster_time_df.set_index('date_hour')
+    station_time_index = pd.MultiIndex.from_product([date_hours, station_ids], names=['date_hour', 'station_id'])
+    station_time_df = pd.DataFrame({'arrivals': 0, 'departures': 0}, index=station_time_index)
+    station_time_df = station_time_df.reset_index()
+    station_time_df = station_time_df.set_index('date_hour')
 
-    model_data = cluster_time_df.merge(additional_features_df, how='left', left_index=True, right_index=True)
-    model_data = model_data.drop(['icon', 'precipType', 'summary', 'date', 'holiday_description'], axis=1)
+    #join weather and holiday data
+    model_data = station_time_df.merge(additional_features_df, how='left', left_index=True, right_index=True)
+
+    #join latitude and longitude from station data
+    model_data = model_data.reset_index()
+    model_data = model_data.merge(stations_df[['id', 'latitude_pca', 'longitude_pca']], how='left', left_on='station_id', right_on='id')
+    model_data = model_data.set_index('date_hour')
 
     #make predictions
-    x_model_data = xgb.DMatrix(model_data)
+    x_model_data = xgb.DMatrix(model_data[features])
     model_data['departures'] = departures_model.predict(x_model_data)
     model_data['arrivals'] = arrivals_model.predict(x_model_data)
     model_data = model_data.reset_index()
 
-    if (False):
-        active_stations = stations_df[(stations_df['first_used'] < timestamp) & (stations_df['last_used'] > timestamp)]['id'].unique()
-        weight_matrix = np.matlib.zeros((cluster_number, active_stations.size))
-        for cluster_index in range(0, cluster_number):
-            cluster_stations = cluster_station_map[str(cluster_index)]
-            station_index = 0
-            for station_id in active_stations:
-                if (str(station_id) in cluster_stations):
-                    weight_matrix[cluster_index, station_index] = cluster_stations[str(station_id)]
-                station_index += 1
-
-        weight_threshold = 1e-3
-        inv_weight_matrix = weight_matrix.I
-        trips = pd.DataFrame([], columns=['date_hour', 'station_id', 'arrivals', 'departures'])
-        for cluster_index in range(0, cluster_number):
-            station_index = 0
-            for station_id in active_stations:
-                weight = inv_weight_matrix[station_index, cluster_index]
-                if(weight > weight_threshold):
-                    weighted_trips = model_data[model_data['cluster_id'] == cluster_index][['date_hour', 'arrivals', 'departures']]
-                    weighted_trips['arrivals'] = weighted_trips['arrivals'] * weight
-                    weighted_trips['departures'] = weighted_trips['departures'] * weight
-                    weighted_trips['station_id'] = station_id
-                    trips = trips.append(weighted_trips)
-                station_index += 1
-
-    trips = model_data
-    trips['station_id'] = 0
-
-    #trips = trips.groupby(['date_hour', 'station_id']).sum()
-    trips = trips.round()
-    trips = trips.reset_index()
-    trips = trips.set_index('date_hour')
+    #add predicted arrivals and departures to cache and return them 
+    trips = model_data[['date_hour', 'station_id', 'arrivals', 'departures']]
+    trips = trips.round({'arrivals': 0, 'departures': 0})
     trips['flow'] = trips['arrivals'] - trips['departures']
+    trips = trips.set_index('date_hour')
 
     predictions_cache = predictions_cache.append(trips)
     predictions_cache = predictions_cache.sort_index()
@@ -134,29 +96,40 @@ def send_resource(path):
 def send_package(path):
     return send_from_directory('node_modules', path)
 
-@app.route('/stationHistory', methods=["POST"])
-def station_history():
+#fetch numbers for a single station and date
+@app.route('/stationData', methods=["POST"])
+def station_data():
     if request.method == "POST":
         json_dict = request.get_json()
 
+        #retrieve requested station id and date
         stationId = int(json_dict['stationId'])
         timestamp = pd.Timestamp(json_dict['timestamp'], tz='UTC')
 
-        #timestamp_start = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 0)
-        #timestamp_end = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 23)
-        #station_history_df[timestamp_start:timestamp_end]
+        timestamp_start = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 0)
+        timestamp_end = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 23)
+        
+        #real historical data
+        real_df = station_history_df[timestamp_start:timestamp_end]
+        real_df = real_df.reset_index()
+        real_df = real_df[real_df['station_id'] == stationId]
+        real_df['hour'] = real_df['date_hour'].dt.hour
+        real_df = real_df.set_index('hour')
 
-        slice_df = get_predictions(timestamp)
-        slice_df = slice_df.reset_index()
-        slice_df = slice_df[slice_df['station_id'] == stationId]
-        slice_df['hour'] = slice_df['date_hour'].dt.hour
-        slice_df = slice_df.set_index('hour')
-        print(slice_df)
+        #get predictions
+        predictions_df = get_predictions(timestamp_start, timestamp_end)
+        predictions_df = predictions_df.reset_index()
+        predictions_df = predictions_df[predictions_df['station_id'] == stationId]
+        predictions_df['hour'] = predictions_df['date_hour'].dt.hour
+        predictions_df = predictions_df.set_index('hour')
+
+        #return real and predicted data as json
         return_json = {
-            'values': slice_df.to_json(orient='index'),
+            'predictionValues': predictions_df.to_json(orient='index'),
+            'realValues': real_df.to_json(orient='index'),
             'maximum': {
-                'arrivals': int(slice_df['arrivals'].max()),
-                'departures': int(slice_df['departures'].max())
+                'arrivals': int(real_df['arrivals'].append(predictions_df['arrivals']).max()),
+                'departures': int(real_df['departures'].append(predictions_df['departures']).max())
             }
         }
 
@@ -164,35 +137,48 @@ def station_history():
     else:
         return ""
 
-@app.route('/events', methods=["POST"])
-def events():
+#fetch aggregated numbers for all stations for a given date
+@app.route('/aggregatedData', methods=["POST"])
+def aggregatedData():
     if request.method == "POST":
         json_dict = request.get_json()
 
+        #retrievethe requested date and the event threshold 
         timestamp = pd.Timestamp(json_dict['timestamp'], tz='UTC')
         event_threshold = int(json_dict['eventThreshold'])
 
-        #timestamp_start = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 0)
-        #timestamp_end = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 23)
-        #slice_df = station_history_df[timestamp_start:timestamp_end]
+        timestamp_start = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 0)
+        timestamp_end = pd.Timestamp(timestamp.year, timestamp.month, timestamp.day, 23)
+        
+        #real historical data
+        real_df = station_history_df[timestamp_start:timestamp_end]
+        real_df = real_df.reset_index()
+        real_df['hour'] = real_df['date_hour'].dt.hour
 
-        slice_df = get_predictions(timestamp)
-        slice_df = slice_df.reset_index()
-        slice_df['hour'] = slice_df['date_hour'].dt.hour
+        #get predicted data
+        predictions_df = get_predictions(timestamp_start, timestamp_end)
+        predictions_df = predictions_df.reset_index()
+        predictions_df['hour'] = predictions_df['date_hour'].dt.hour
 
-        return_json = {}
+        #aggregate real and predicted data
+        aggregated_real_df = real_df.drop(['date_hour', 'station_id'], axis=1)
+        aggregated_real_df = aggregated_real_df.groupby('hour').sum()
 
-        aggregated_df = slice_df.drop(['date_hour', 'station_id'], axis=1)
-        aggregated_df = aggregated_df.groupby('hour').sum()
-        return_json['aggregated'] = aggregated_df.to_json(orient='index')
+        aggregated_predictions_df = predictions_df.drop(['date_hour', 'station_id'], axis=1)
+        aggregated_predictions_df = aggregated_predictions_df.groupby('hour').sum()
 
-        return_json['aggregatedMaximum'] = {
-            'arrivals': int(aggregated_df['arrivals'].max()),
-            'departures': int(aggregated_df['departures'].max())
+        #get all rows with absolute flow above the event threshold
+        events_df = predictions_df[abs(predictions_df['flow']) > event_threshold]
+
+        return_json = {
+            'aggregatedRealValues': aggregated_real_df.to_json(orient='index'),
+            'aggregatedPredictionValues': aggregated_predictions_df.to_json(orient='index'),
+            'events': events_df.to_json(orient='records'),
+            'aggregatedMaximum': {
+                'arrivals': int(aggregated_predictions_df['arrivals'].append(aggregated_real_df['arrivals']).max()),
+                'departures': int(aggregated_predictions_df['departures'].append(aggregated_real_df['departures']).max())
+            }
         }
-
-        slice_df = slice_df[(slice_df['flow'] > event_threshold) | (slice_df['flow'] < -event_threshold)]
-        return_json['events'] = slice_df.to_json(orient='records')
 
         return json.dumps(return_json)
     else:

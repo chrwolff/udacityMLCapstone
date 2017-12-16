@@ -21,9 +21,10 @@ This project follows the classical data science steps:
 ### Starting the server
 1. Open python console
 1. Change to the webapp directory 
-1. Execute ```set FLASK_APP=server.py```
-1. Execute ```flask run```
-1. Open browser ```localhost:5000```
+1. Execute `set FLASK_APP=server.py`
+1. Optional debug mode: `set FLASK_DEBUG=1`
+1. Execute `flask run`
+1. Open browser `localhost:5000`
 
 ## Data License
 The author is not associated with the operator of Hubway, [Motivate International, Inc.](https://www.motivateco.com/)

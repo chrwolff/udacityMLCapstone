@@ -6,6 +6,6 @@ require("weathericons/css/weather-icons.min.css");
 require("leaflet/dist/leaflet.css")
 require('../less/main.less');
 
-import Controller from './Controller.js';
+import Controller from './controller.js';
 
 Controller.init();
