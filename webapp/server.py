@@ -13,6 +13,7 @@ features = ['latitude_pca', 'longitude_pca',
             'weekday', 'is_holiday', 'is_weekend', 'is_weekend_or_holiday']
 
 #load stations
+print("Loading Station data...")
 stations_df = pd.read_csv('../data/modelInput/stations_201505_201611.csv')
 stations_df = stations_df.rename(columns={
     'station_name': 'name',
@@ -23,10 +24,12 @@ stations_df['last_used'] = stations_df['last_used'].apply(pd.Timestamp)
 station_ids = stations_df['id'].unique()
 
 #load models
+print("Loading models...")
 departures_model = xgb.Booster(model_file='../models/boosterDepartures.xgbm')
 arrivals_model = xgb.Booster(model_file='../models/boosterArrivals.xgbm')
 
 #load additional features
+print("Loading additional features...")
 additional_features_df = pd.read_csv('../data/modelInput/additionalFeatures.csv')
 additional_features_df['date_hour'] = additional_features_df['date_hour'].apply(pd.Timestamp)
 additional_features_df = additional_features_df.set_index('date_hour')
@@ -40,7 +43,8 @@ predictions_cache = pd.DataFrame([], columns=['date_hour',
                                               'flow'])
 predictions_cache = predictions_cache.set_index('date_hour')
 
-#load the actual flow data for comparison 
+#load the actual flow data for comparison
+print("Loading historical data...")
 station_history_df = pd.read_csv('../data/modelInput/flowPerHourAndStation.csv')
 station_history_df['date_hour'] = station_history_df['date_hour'].apply(pd.Timestamp)
 station_history_df = station_history_df.set_index('date_hour')
@@ -203,7 +207,7 @@ def weather():
 
 @app.route('/stations', methods=["GET"])
 def stations():
-    return stations_df.to_json(orient='index')
+    return stations_df.set_index('id').to_json(orient='index')
 
 if __name__ == '__main__':
     app.run()

@@ -5,11 +5,30 @@ const DESKTOP_BREAKPOINT = 1130;
 var isDesktop;
 var bannerHeight;
 
+//toggle map view for mobile mode
+var toggleMap = (mapIsShown => {
+  return (forceMapIsShown = null) => {
+    if (forceMapIsShown !== null) {
+      mapIsShown = forceMapIsShown;
+    } else {
+      mapIsShown = !mapIsShown;
+    }
+    if (mapIsShown) {
+      $("#map").addClass("show");
+      $("#mapButton").addClass("bannerButtonPressed");
+    } else {
+      $("#map").removeClass("show");
+      $("#mapButton").removeClass("bannerButtonPressed");
+    }
+  };
+})(false);
+
 function init() {
   bannerHeight = $(".banner").height();
   setViewDimensions();
   changeLayout();
   $(window).resize(onResize);
+  $('#mapButton').click(() => toggleMap());
 }
 
 function setViewDimensions() {
@@ -54,6 +73,7 @@ function changeLayout() {
   var bannerRight = $(".bannerRight");
   var stationViewTop = $(".stationViewTop");
 
+  //move buttons, staion name and logo
   if (isDesktop) {
     bannerCenter.append(stationName);
     bannerCenter.append(backButton);
@@ -63,6 +83,9 @@ function changeLayout() {
     stationViewTop.append(backButton);
     bannerCenter.append(logo);
   }
+
+  //force map hide in moble mode
+  toggleMap(false);
 }
 
 export default {

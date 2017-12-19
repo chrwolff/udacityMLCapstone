@@ -1,16 +1,22 @@
 const L = require("leaflet");
 require("drmonty-leaflet-awesome-markers");
 import config from "./config.js";
+import model from "./model.js";
+import { store } from "./store.js";
+import { selectStation, selectOverview } from "./actions";
 
 export default class MapView {
-  static init(controller) {
-    this.Controller = controller;
+  static init() {
+    var mapBoundaries = model.getBoundaries();
 
     this.map = L.map("map", {
-      center: this.Controller.getMidPoint(),
+      center: model.getMidPoint(),
       zoom: config.minimumZoom,
       minZoom: config.minimumZoom,
-      maxBounds: this.Controller.getBounds()
+      maxBounds: L.latLngBounds(
+        mapBoundaries.northWestCorner,
+        mapBoundaries.southEastCorner
+      )
     });
 
     L.tileLayer("http://{s}.tile.osm.org/{z}/{x}/{y}.png", {
@@ -20,9 +26,8 @@ export default class MapView {
 
     //create station markers for the map
     this.markers = {};
-    var stations = this.Controller.getAllStations();
-    for (var id in stations) {
-      id = parseInt(id);
+    var stations = model.getStations();
+    Object.getOwnPropertyNames(stations).forEach(id => {
       var station = stations[id];
       var markerIcon = L.AwesomeMarkers.icon({
         prefix: "fa",
@@ -40,14 +45,56 @@ export default class MapView {
 
       marker.on(
         "click",
-        (closureId => () => MapView.Controller.selectStation(closureId))(id)
+        (closureId => () => {
+          if (store.getState().state.selectedStationId !== closureId) {
+            store.dispatch(selectStation(closureId));
+          } else {
+            store.dispatch(selectOverview());
+          }
+        })(id)
       );
 
       this.markers[id] = marker;
-    }
+    });
+
+    //observe station selections
+    store.observeStore(
+      (oldState, currentState) => {
+        this.render(currentState.selectedStationId, store.getState().state.showEvents);
+        this.flyTo(currentState.selectedStationId);
+        if (oldState.showOverview && !currentState.showOverview) {
+          this.show(false);
+        }
+      },
+      state => {
+        return {
+          showOverview: state.showOverview,
+          selectedStationId: state.selectedStationId
+        };
+      },
+      this
+    );
+
+    //observe event selections
+    store.observeStore(
+      (oldState, currentState) => {
+        this.render(store.getState().state.selectedStationId, currentState.showEvents);
+        if (!oldState.showEvents && currentState.showEvents) {
+          this.show(true);
+        }
+      },
+      state => {
+        return {
+          showEvents: state.showEvents,
+          selectedHour: state.selectedHour
+        };
+      },
+      this
+    );
   }
 
   static show(isShow) {
+    //show map when in mobile mode
     var mapElement = document.getElementById("map");
     if (isShow) {
       mapElement.classList.add("show");
@@ -56,66 +103,43 @@ export default class MapView {
     }
   }
 
-  static flyTo() {
-    var centeredStation = this.Controller.getCenteredStation();
-    if (centeredStation) {
-      this.map.flyTo(
-        [
-          centeredStation.stationData.latitude,
-          centeredStation.stationData.longitude
-        ],
-        15
-      );
+  static flyTo(selectedStationId = null) {
+    if (selectedStationId !== null) {
+      var selectedStation = model.getStation(selectedStationId);
+      this.map.flyTo([selectedStation.latitude, selectedStation.longitude], 15);
     } else {
-      this.map.flyTo(this.Controller.getMidPoint(), config.minimumZoom);
+      this.map.flyTo(model.getMidPoint(), config.minimumZoom);
     }
   }
 
-  static render() {
-    var centeredStation = this.Controller.getCenteredStation();
-    var centeredStationId = null;
-    var currentStations = this.Controller.getCurrentStations();
-    var isEventingMode = this.Controller.isEventingMode();
+  static render(selectedStationId = null, isEventingView = false) {
     var eventingStations = {};
-
-    if (isEventingMode) {
-      eventingStations = this.Controller.getEventingStations();
-    }
-
-    if (centeredStation) {
-      centeredStationId = centeredStation.stationId;
+    if (isEventingView) {
+      eventingStations = model.getEventingStations();
     }
 
     for (var id in this.markers) {
-      id = parseInt(id);
       var marker = this.markers[id];
       marker.closeTooltip();
 
       var markerColor;
-      var markerIcon;
       var markerOpacity;
-      if (id === centeredStationId) {
+      if (id === selectedStationId) {
         markerColor = "orange";
-        markerIcon = "bicycle";
         markerOpacity = 1.0;
-      } else if (currentStations[id]) {
-        markerIcon = "bicycle";
+      } else {
         if (eventingStations[id]) {
           markerColor = "maroon";
           markerOpacity = 1.0;
         } else {
           markerColor = "darkgreen";
-          markerOpacity = isEventingMode ? 0.5 : 1.0;
+          markerOpacity = isEventingView ? 0.5 : 1;
         }
-      } else {
-        markerColor = "gray";
-        markerIcon = "ban";
-        markerOpacity = 0.5;
       }
 
       var markerIcon = L.AwesomeMarkers.icon({
         prefix: "fa",
-        icon: markerIcon,
+        icon: "bicycle",
         markerColor: markerColor
       });
       marker.setIcon(markerIcon);

@@ -1,17 +1,18 @@
 import WeatherIcons from "./weatherIcons.js";
 import config from "./config.js";
+import model from "./model.js";
 const d3 = require("d3");
 const Pikaday = require("pikaday");
+import { store } from "./store.js";
+import { selectDate, selectOverview, showEvents } from "./actions";
 
 export default class StationView {
-  static init(controller) {
-    this.Controller = controller;
-
+  static init() {
     this.stationName = document.getElementById("stationName");
 
     this.datePicker = new Pikaday({
       field: document.getElementById("datepicker"),
-      onSelect: this.Controller.onDateSelect.bind(this.Controller),
+      onSelect: date => store.dispatch(selectDate(date)),
       minDate: config.firstDate,
       maxDate: config.lastDate,
       defaultDate: config.firstDate,
@@ -68,7 +69,7 @@ export default class StationView {
     }
 
     this.backButton = document.getElementById("backButton");
-    this.backButton.onclick = () => this.Controller.selectStation();
+    this.backButton.onclick = () => store.dispatch(selectOverview());
 
     //create tooltip for d3 charts
     this.d3TooltipDiv = d3
@@ -76,12 +77,47 @@ export default class StationView {
       .append("div")
       .attr("class", "tooltip")
       .style("opacity", 0);
+
+    //observe state for rerender
+    store.observeStore(
+      (oldState, currentState) => {
+        if (currentState.showOverview) {
+          if (!currentState.isFetchingOverviewData) {
+            this.renderHeader();
+            this.renderOverviewTimeline();
+          }
+        } else {
+          if (!currentState.isFetchingStationData) {
+            this.renderHeader(currentState.selectedStationId);
+            this.renderStationTimeline();
+          }
+        }
+
+        if (
+          oldState.isFetchingOverviewData &&
+          !currentState.isFetchingOverviewData
+        ) {
+          //when overview data was loaded
+          this.renderWeatherTimeline();
+        }
+      },
+      state => {
+        return {
+          isFetchingOverviewData: state.isFetchingOverviewData,
+          isFetchingStationData: state.isFetchingStationData,
+          showOverview: state.showOverview,
+          selectedStationId: state.selectedStationId,
+          showEvents: state.showEvents,
+          selectedHour: state.selectedHour
+        };
+      },
+      this
+    );
   }
 
-  static renderHeader() {
-    var header = this.Controller.getStationHeader();
-    if (header) {
-      this.stationName.innerHTML = header;
+  static renderHeader(selectedStationId = null) {
+    if (selectedStationId !== null) {
+      this.stationName.innerHTML = model.getStation(selectedStationId).name;
       this.backButton.classList.add("show");
     } else {
       this.stationName.innerHTML = "Overview";
@@ -90,7 +126,7 @@ export default class StationView {
   }
 
   static renderWeatherTimeline() {
-    var weather = this.Controller.getWeather();
+    var weather = model.getWeather();
     for (var hour in this.timeline) {
       var timelineItem = this.timeline[hour];
       var weatherItem = weather[hour];
@@ -103,7 +139,7 @@ export default class StationView {
     }
   }
 
-  static renderEventsTimeline() {
+  static renderOverviewTimeline() {
     //clear entries
     for (var hour in this.timeline) {
       var timelineItem = this.timeline[hour];
@@ -120,13 +156,18 @@ export default class StationView {
     }
 
     //render in/out bars
-    var aggregatedPredictions = this.Controller.getAggregatedPredictions();
-    var aggregatedRealValues = this.Controller.getAggregatedRealValues();
-    var aggregatedMaximum = this.Controller.getAggregatedMaximum();
-    for (var hour in aggregatedPredictions) {
+    var predictedValues;
+    var realValues;
+    var maximumValues;
+    ({
+      realValues,
+      predictedValues,
+      maximumValues
+    } = model.getAggregatedData());
+    for (var hour in predictedValues) {
       var timelineItem = this.timeline[hour];
-      var predicted = aggregatedPredictions[hour];
-      var real = aggregatedRealValues[hour];
+      var predicted = predictedValues[hour];
+      var real = realValues[hour];
 
       this.renderBars(
         hour,
@@ -134,14 +175,14 @@ export default class StationView {
         predicted.departures,
         real.arrivals,
         real.departures,
-        aggregatedMaximum.arrivals,
-        aggregatedMaximum.departures
+        maximumValues.arrivals,
+        maximumValues.departures
       );
     }
 
     //collect hours with critcal events
-    var eventingStationsHour = this.Controller.getEventingStationsHour();
-    var stationEvents = this.Controller.getEvents();
+    var eventingStationsHour = store.getState().state.selectedHour;
+    var stationEvents = model.getEvents();
     var criticalHours = new Set();
     for (var index in stationEvents) {
       criticalHours.add(stationEvents[index].hour);
@@ -160,7 +201,13 @@ export default class StationView {
       }
 
       eventButton.onclick = (hour => {
-        return () => this.Controller.showEventingStations(hour);
+        return () => {
+          if (store.getState().state.selectedHour === hour) {
+            store.dispatch(showEvents(false, null));
+          } else {
+            store.dispatch(showEvents(true, hour));
+          }
+        };
       })(hour);
 
       timelineItem.stationCritical.appendChild(eventButton);
@@ -170,14 +217,15 @@ export default class StationView {
   }
 
   static renderStationTimeline() {
-    var stationPredictions = this.Controller.getStationPredictions();
-    var stationRealValues = this.Controller.getStationRealValues();
-    var stationMaximum = this.Controller.getStationMaximum();
-    for (var hour in stationPredictions) {
+    var predictedValues;
+    var realValues;
+    var maximumValues;
+    ({ realValues, predictedValues, maximumValues } = model.getStationData());
+    for (var hour in predictedValues) {
       var hour = parseInt(hour);
       var timelineItem = this.timeline[hour];
-      var predicted = stationPredictions[hour];
-      var real = stationRealValues[hour];
+      var predicted = predictedValues[hour];
+      var real = realValues[hour];
 
       //remove entries
       while (timelineItem.stationEvent.firstChild) {
@@ -199,8 +247,8 @@ export default class StationView {
         predicted.departures,
         real.arrivals,
         real.departures,
-        stationMaximum.arrivals,
-        stationMaximum.departures
+        maximumValues.arrivals,
+        maximumValues.departures
       );
 
       //set button with icon for critical events
@@ -232,7 +280,7 @@ export default class StationView {
     var scaledRealIn = inOutMax > 0 ? realIn / inOutMax : 0;
     var scaledRealOut = inOutMax > 0 ? realOut / inOutMax : 0;
 
-    if ((predictedIn + predictedOut) > 0) {
+    if (predictedIn + predictedOut > 0) {
       var chart = d3
         .select("#stationEvent" + hour)
         .append("svg")
@@ -297,7 +345,7 @@ export default class StationView {
         .attr("height", 9)
         .style("fill", "firebrick");
 
-      //set tooltip text 
+      //set tooltip text
       chart.on(
         "mouseover",
         ((predictedIn, predictedOut, realIn, realOut) => {
