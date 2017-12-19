@@ -2,8 +2,6 @@ data/raw/hourlyWeatherSummary_2015_2016.json
 .ipynb_checkpoints
 jupyterNotebooks/darkskyApiKey.txt
 data/raw/*-hubway-tripdata.csv
-data/modelInput/*.csv
 webapp/node_modules
-yarn.lock
 *.xgbm
 __pycache__
