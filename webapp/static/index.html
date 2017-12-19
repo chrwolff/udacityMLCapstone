@@ -1,0 +1,62 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Hubway ML</title>
+    <meta name="description" content="Hubway ML">
+    <meta name="author" content="Christian Wolff">
+
+    <link rel="shortcut icon" href="static/src/images/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="static/src/images/favicon.ico" type="image/x-icon">
+
+    <script src="static/dist/bundle.js"></script>
+
+    <!--[if lt IE 9]>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+    <div class="banner">
+        <div class="bannerLeft">
+            <!--
+            <a href="#" class="fa fa-question-circle fa-2x bannerButton"></a>
+            -->
+        </div>
+        <div class="bannerCenter">
+            <h2 id="stationName"></h2>
+            <a ref="#" id="backButton" class="fa fa-undo fa-2x bannerButton"></a>
+        </div>
+        <div class="bannerRight">
+            <img class="logo">
+            <a ref="#" id="mapButton" class="fa fa-map-o fa-2x bannerButton"></a>
+        </div>
+    </div>
+    <div class="container">    
+        <div class="item" id="stationView">
+            <div class="stationViewTop"></div>
+            <div class="stationViewMenu">
+                <label for="datepicker">Date</label>
+                <input type="text" id="datepicker">
+            </div>          
+            <div class="table-header table">
+                <div class="table-column hourCell">Hour</div>
+                <div class="table-column weatherSummaryHeader">Weather Summary</div>
+                <div class="table-column temperatureCell">Temperature</div>
+                <div class="table-column windSpeedCell">Windspeed</div>
+                <div class="table-column stationEventHeader">Station Events</div>
+            </div>
+            <div id="timeline" class="table"></div>
+        </div>
+        <div class="item" id="map"></div>
+    </div>
+    <div class="overlay">
+        <i class="fa fa-cog fa-spin fa-5x fa-fw"></i>
+        <h1>Loading...</h1>
+    </div>
+</body>
+</html>

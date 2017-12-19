@@ -1,10 +1,7 @@
-input/hubway_trips_2.csv
-input/hubway_trips.csv
-img
-*.aux
-*.log
-fromTripsToFlows.pdf
-*.tex
-*.gz
-*.out
-project.pdf
+data/raw/hourlyWeatherSummary_2015_2016.json
+.ipynb_checkpoints
+jupyterNotebooks/darkskyApiKey.txt
+data/raw/*-hubway-tripdata.csv
+webapp/node_modules
+*.xgbm
+__pycache__
