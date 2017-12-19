@@ -16,11 +16,14 @@ This project follows the classical data science steps:
 ## Webapp
 
 ### Prerequisites
+- pandas, https://pandas.pydata.org/
+- xgboost, https://xgboost.readthedocs.io/en/latest/
 - flask, http://flask.pocoo.org/
+- Unzip files in folder `models`
 
 ### Starting the server
 1. Open python console
-1. Change to the webapp directory 
+1. Change to the `webapp` directory 
 1. Execute `set FLASK_APP=server.py`
 1. Optional debug mode: `set FLASK_DEBUG=1`
 1. Execute `flask run`
