@@ -66,6 +66,7 @@ function onResize() {
 function changeLayout() {
   var stationName = $("#stationName").detach();
   var backButton = $("#backButton").detach();
+  var introButton = $("#introButton");
   var logo = $(".logo").detach();
   logo.attr("src", logoImage);
 
@@ -78,10 +79,12 @@ function changeLayout() {
     bannerCenter.append(stationName);
     bannerCenter.append(backButton);
     bannerRight.append(logo);
+    introButton.css("display", "");
   } else {
     stationViewTop.append(stationName);
     stationViewTop.append(backButton);
     bannerCenter.append(logo);
+    introButton.css("display", "none");
   }
 
   //force map hide in moble mode

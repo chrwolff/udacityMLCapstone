@@ -1,6 +1,7 @@
 <!doctype html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
 
@@ -23,32 +24,33 @@
 <body>
     <div class="banner">
         <div class="bannerLeft">
-            <!--
-            <a href="#" class="fa fa-question-circle fa-2x bannerButton"></a>
-            -->
+            <a href="#" id="introButton" class="fa fa-question-circle fa-2x bannerButton"></a>
         </div>
         <div class="bannerCenter">
             <h2 id="stationName"></h2>
+            <!--
             <a ref="#" id="backButton" class="fa fa-undo fa-2x bannerButton"></a>
+            -->
+            <a ref="#" id="backButton">Deselect</a>
         </div>
         <div class="bannerRight">
             <img class="logo">
             <a ref="#" id="mapButton" class="fa fa-map-o fa-2x bannerButton"></a>
         </div>
     </div>
-    <div class="container">    
+    <div class="container">
         <div class="item" id="stationView">
             <div class="stationViewTop"></div>
             <div class="stationViewMenu">
                 <label for="datepicker">Date</label>
                 <input type="text" id="datepicker">
-            </div>          
+            </div>
             <div class="table-header table">
-                <div class="table-column hourCell">Hour</div>
-                <div class="table-column weatherSummaryHeader">Weather Summary</div>
-                <div class="table-column temperatureCell">Temperature</div>
-                <div class="table-column windSpeedCell">Windspeed</div>
-                <div class="table-column stationEventHeader">Station Events</div>
+                <div id="headerHour" class="table-column hourCell">Hour</div>
+                <div id="headerWeatherSummary" class="table-column weatherSummaryHeader">Weather Summary</div>
+                <div id="headerTemperature" class="table-column temperatureCell">Temperature</div>
+                <div id="headerWindspeed" class="table-column windSpeedCell">Windspeed</div>
+                <div id="headerEvent" class="table-column stationEventHeader">Station Events</div>
             </div>
             <div id="timeline" class="table"></div>
         </div>
@@ -59,4 +61,5 @@
         <h1>Loading...</h1>
     </div>
 </body>
+
 </html>
