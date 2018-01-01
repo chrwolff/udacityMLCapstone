@@ -13,6 +13,7 @@ import model from "./model.js";
 import "./overlayController.js";
 import { selectDate } from "./actions";
 import { store } from "./store.js";
+import Intro from "./Intro";
 const $ = require("jquery");
 
 $.when($.ready).then(function() {
@@ -23,6 +24,7 @@ $.when($.ready).then(function() {
   model.fetchStations().then(
     function() {
       MapView.init();
+      Intro.init();
 
       //show all DOM elements when ready
       $(".container").css("opacity", 1);
