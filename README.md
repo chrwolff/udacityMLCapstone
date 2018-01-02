@@ -19,15 +19,15 @@ This project follows the classical data science steps:
 - pandas, https://pandas.pydata.org/
 - xgboost, https://xgboost.readthedocs.io/en/latest/
 - flask, http://flask.pocoo.org/
-- Unzip files in folder `models`
+- Unzip the files in the folder `models`
 
 ### Starting the server
-1. Open python console
-1. Change to the `webapp` directory 
+1. Open a python console.
+1. Change to the `webapp` directory of this repository.
 1. Execute `set FLASK_APP=server.py`
-1. Optional debug mode: `set FLASK_DEBUG=1`
-1. Execute `flask run`
-1. Open browser `localhost:5000`
+1. Optional: Set debug mode with `set FLASK_DEBUG=1`
+1. Execute `flask run`. Wait until the server has started.
+1. Open `localhost:5000` in a web browser. 
 
 ## Data License
 The author is not associated with the operator of Hubway, [Motivate International, Inc.](https://www.motivateco.com/)

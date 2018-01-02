@@ -10,12 +10,12 @@ export default {
     {
       element: "#stationName",
       intro:
-        "This header displays the selected station. Ff no station is selected, it displays 'Overview'. In overview mode, all numbers in the table below are the cumulative result of all stations. "
+        "This header displays the selected station. If no station is selected, it displays 'Overview'. In overview mode, the tabular view displays the accumulated numbers of all stations."
     },
     {
       element: "#stationView",
       intro:
-        "The tabular view shows you the detailed predictions and historical data for the selected station. In overview mode it shows the cumulated data for all stations."
+        "The tabular view shows you the detailed predictions and historical data for the selected station. In overview mode it shows the accumulated data for all stations."
     },
     {
       element: "#datepicker",

@@ -74,7 +74,7 @@ function changeLayout() {
   var bannerRight = $(".bannerRight");
   var stationViewTop = $(".stationViewTop");
 
-  //move buttons, staion name and logo
+  //move buttons, station name and logo
   if (isDesktop) {
     bannerCenter.append(stationName);
     bannerCenter.append(backButton);
@@ -87,7 +87,7 @@ function changeLayout() {
     introButton.css("display", "none");
   }
 
-  //force map hide in moble mode
+  //force map hide in mobile mode
   toggleMap(false);
 }
 
