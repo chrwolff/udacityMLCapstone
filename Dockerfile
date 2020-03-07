@@ -1,5 +1,6 @@
 #https://www.balena.io/docs/reference/base-images/base-images-ref/
-FROM balenalib/raspberrypi3:buster
+#FROM balenalib/raspberrypi3:buster
+FROM debian:buster-slim
 
 #https://hub.docker.com/r/continuumio/miniconda3/dockerfile
 ENV LANG=C.UTF-8 LC_ALL=C.UTF-8
