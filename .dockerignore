@@ -1,0 +1,10 @@
+.idea
+.vscode
+data/raw
+jupyterNotebooks
+models/*.zip
+.ipynb_checkpoints
+webapp/node_modules
+__pycache__
+project.pdf
+proposal.pdf
